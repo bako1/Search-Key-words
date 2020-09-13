@@ -17,18 +17,18 @@ import java.util.stream.Stream;
 
 public class ReadFile {
     private List<String> listOfFile;
-    private HashMap<String, ArrayList> mapWordToFile;
+    private HashMap<String, ArrayList<String>> mapWordToFile;
 
     public ReadFile() {
         this.listOfFile = new ArrayList<>();
         this.mapWordToFile = new HashMap<>();
     }
 
-    public HashMap<String, ArrayList> getMapWordToFile() {
+    public HashMap<String, ArrayList<String>> getMapWordToFile() {
         return mapWordToFile;
     }
 
-    public void setWordToFile(HashMap<String, ArrayList> mAPwORDtOfILE) {
+    public void setWordToFile(HashMap<String, ArrayList<String>> mAPwORDtOfILE) {
         this.mapWordToFile = mAPwORDtOfILE;
     }
 
@@ -51,7 +51,7 @@ public class ReadFile {
             setListOfFile(arrayList);
             writeOutput("The folder "+folderName + " has "  +
                     getListOfFile().size() + " " + " " + fileExtension + " files\n");
-            System.out.println(getListOfFile());
+
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
@@ -61,7 +61,7 @@ public class ReadFile {
     public void readTxt(String fileName) {
 
         ArrayList<String> fromFile = new ArrayList<>();
-        HashMap<String,ArrayList> mapFileToWords = new HashMap<>();
+        HashMap<String,ArrayList<String>> mapFileToWords = new HashMap<>();
         String words;
         String[] afterSplit;
         try {
@@ -82,14 +82,14 @@ public class ReadFile {
 
 
         } catch (IOException ioe) {
-            System.out.println(ioe+ "\n" +"cant find "+fileName);
+            System.out.println(ioe+ "\n" +"can't find "+fileName);
         }
 
     }
 
    public void readDocs(String fileName){
        ArrayList<String> fromFile = new ArrayList<>();//ArrayList to store strings from file
-       HashMap<String,ArrayList> mapFileToWords = new HashMap<>();// hash map key->file name & value arrayList of words
+       HashMap<String,ArrayList<String>> mapFileToWords = new HashMap<>();// hash map key->file name & value arrayList of words
         try {
             FileInputStream fis = new FileInputStream(fileName);
             //used to extract the content
@@ -97,36 +97,29 @@ public class ReadFile {
             //fetch paragraph text using getParagraphText() method
 
             WordExtractor extractor = new WordExtractor(docs);
-            String [] fileData = extractor.getParagraphText();
-            String [] afterSplit;
-
-            //iterate over the paragraph list
-            for(String paragraph: fileData){
-
-                paragraph = paragraph.replace("[^a-zA-Z0-9]"," ");
-                afterSplit =  paragraph.split(" ");
-                for(String split:afterSplit){
-                    fromFile.add(split);
-                    mapFileToWords.put(fileName,fromFile);
-                    setWordToFile(mapWordToFile);
-                    System.out.println(getMapWordToFile());
-                }
-
+            String text = extractor.getText(); //get the text
+            String[] afterSplit = text.split(" ");
+            for(String split : afterSplit){
+                fromFile.add(split); // add each words in the array afterSlit to the ArrayList
+                mapFileToWords.put(fileName,fromFile); //add fileName as Key and lists of words as a value to the hashMap
+                setWordToFile(mapFileToWords);
             }
 
 
+
         } catch (FileNotFoundException fne) {
-         System.out.println(fne.getMessage());
+            System.out.println(fne.getMessage());
 } catch (IOException ioException) {
-             ioException.printStackTrace();
+            ioException.printStackTrace();
         }
-
-
-   }
+        catch (IllegalArgumentException e){
+            System.out.println("Unknown file format\n"+e.getMessage());
+        }
+    }
     public void readDocx(String fileName){
 
         ArrayList<String> fromFile = new ArrayList<>();//ArrayList to store strings from file
-        HashMap<String,ArrayList> mapFileToWords = new HashMap<>();// hash map key->file name & value arrayList of words
+        HashMap<String,ArrayList<String>> mapFileToWords = new HashMap<>();// hash map key->file name & value arrayList of words
 try {
     String readWords;
     String [] afterSplit;
@@ -134,42 +127,44 @@ try {
     List<XWPFParagraph> xwpfParagraphList;
     try (XWPFDocument dox = new XWPFDocument(fis)) {
         xwpfParagraphList = dox.getParagraphs();
-    }
-    for (XWPFParagraph paragraph : xwpfParagraphList) {
-            readWords =  paragraph.getText().replace("[^a-zA-z0-9]"," ");
-            afterSplit =  readWords.split(" ");
 
-        for(String split:afterSplit){
-            fromFile.add(split);
-            mapFileToWords.put(fileName,fromFile);
-            setWordToFile(mapFileToWords);
+        for (XWPFParagraph paragraph : xwpfParagraphList) {
+            readWords = paragraph.getText().replace("[^a-zA-z0-9]", " ");
+            afterSplit = readWords.split(" ");
 
+            for (String split : afterSplit) {
+                fromFile.add(split);
+                mapFileToWords.put(fileName, fromFile);
+                setWordToFile(mapFileToWords);
+
+
+            }
 
         }
-
+    }catch (IllegalArgumentException e){
+        System.out.println(e.getMessage());
     }
-
 }catch (IOException ioe){
     System.out.println(ioe.getMessage());
 }
     }
 public void readFromFile(String fileExtension,String fileName){
-        switch (fileExtension){
-            case ".docx":
-                readDocx(fileName);
-                break;
-            case ".docs":
-                readDocs(fileName);
-                break;
-            case ".txt":
-                readTxt(fileName);
-                break;
-            default:
-                break;
-
-        }
 
 
+    switch (fileExtension) {
+        case ".docx":
+            readDocx(fileName);
+            break;
+        case ".doc":
+            readDocs(fileName);
+            break;
+        case ".txt":
+            readTxt(fileName);
+            break;
+        default:
+            break;
+
+    }
 
 
 }
